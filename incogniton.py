@@ -117,6 +117,9 @@ class IncognitonWebdriverWrapper:
 class IncognitonApi:
     __BASE_URL = 'http://localhost:35000'
 
+    PROFILE_STATUS_READY = 'Ready'
+    PROFILE_GROUP_IN_WORK = 'В работе'
+
     def all_profiles(self) -> dict:
         return self.__get(f"/profile/all")
 
@@ -124,18 +127,37 @@ class IncognitonApi:
         response = self.__get(f"/profile/get/{profile_id}")
         return self.__get_data_or_fail(response, 'profileData')
 
+    def is_profile_ready(self, profile_id: str) -> bool:
+        return self.get_profile_status(profile_id) == self.PROFILE_STATUS_READY
+
+    def get_profile_status(self, profile_id: str) -> str:
+        response = self.__get(f"/profile/status/{profile_id}")
+        return self.__get_data_or_fail(response, 'status')
+
     def get_cookie(self, profile_id: str) -> dict:
         response = self.__get(f"/profile/cookie/{profile_id}")
         return self.__get_data_or_fail(response, 'CookieData ')
 
-    def add_cookie(self, profile_id: str,  cookies):
-        response = self.__post('/profile/addCookie', {
+    def add_cookie(self, profile_id: str, cookies: list) -> dict:
+        return self.__post('/profile/addCookie', {
             'data': json.dumps({
                 'profile_browser_id': profile_id,
                 'format': 'json',
                 'cookie': json.dumps(cookies)
             })
         })
+
+    def update_profile(self, profile_id: str, profile_info: dict = dict(), proxy_info: dict = dict()) -> dict:
+        request = {
+            "profileData": json.dumps({
+                "profile_browser_id": profile_id,
+                "Proxy": proxy_info,
+                "general_profile_information": profile_info
+            })
+        }
+        response = self.__post("/profile/update", request)
+        # response = {"data": "no request sent"}
+        print(request, response, sep="\n")
         return response
 
     def __get_data_or_fail(self, response: dict, key: str):

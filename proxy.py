@@ -171,7 +171,7 @@ class ProxySaleApi:
             response_data = response.json()
             if response_data.get('averageSpeed') is None:
                 raise ProxyApiException(f"Invalid Proxy speedtest response: {response}")
-            return response_data['averageSpeed']
+            return int(response_data['averageSpeed'])
 
         return _call_safe(get_average_speed, timeout=5)
 

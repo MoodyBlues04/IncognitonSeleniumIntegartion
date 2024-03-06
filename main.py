@@ -104,8 +104,7 @@ def test_selenium_wrapper():
         You can use wrapper.driver to get access to selenium webdriver directly
     """
 
-    print('\n')
-    wrapper.get('https://avito.ru')
+    wrapper.get('https://www.avito.ru/')
 
 
 def test_proxy_api():
@@ -117,9 +116,18 @@ def test_service():
     from services import IncognitonWebdriverService, ProxyOptions, IncognitonWebdriverOptions
 
     webdriver_options = IncognitonWebdriverOptions()
+    webdriver_options.adblock_extension_path = ADBLOCK_PATH
+    webdriver_options.proxy_config_ext_path = PROXY_AUTH_EXT_PATH
+    webdriver_options.proxy = {
+        "connection_type": "HTTP proxy",
+        "proxy_url": "wproxy.site:13878",
+        "proxy_username": "YdsYN6",
+        "proxy_password": "Et7uscuPyg2M"
+    }
     proxy_options = ProxyOptions(PROXY_API_KEY, PROXY_KEY, PROXY_ID, MEGAFON_OPERATOR, RYAZAN_CITY_ID)
     service = IncognitonWebdriverService(PROFILE_ID, webdriver_options, proxy_options)
     webdriver_wrapper = service.start_session()  # Do any selenium staff via webdriver_wrapper
+    webdriver_wrapper.get('https://avito.ru')
     service.end_session(webdriver_wrapper)
 
 
