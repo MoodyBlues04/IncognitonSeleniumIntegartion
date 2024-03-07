@@ -9,10 +9,15 @@ ADBLOCK_PATH = 'C:\\Users\\ant\AppData\Local\Google\Chrome\\User Data\Default\Ex
 """ See: https://www.crx4chrome.com/crx/31927/ """
 PROXY_AUTH_EXT_PATH = 'proxy_auth_plugin.zip'
 
+PROXY_HOST = 'yproxy.site'
+PROXY_PORT = 13878
+PROXY_USER = 'YdsYN6'
+PROXY_PASSWORD = 'Et7uscuPyg2M'
 PROXY_ID = 231297
-PROXY_API_KEY = '521ff8a72ce348ea31a8b172546cc8d2'
+PROXY_API_KEY = '295f08e7d39ff2be0fc928dc84ee1e4a'
 PROXY_KEY = 'f6e5b670837a85bc9644719b07e686ff'
 RYAZAN_CITY_ID = 1736
+MOSCOW_CITY_ID = 1
 MEGAFON_OPERATOR = 'megafone'
 
 
@@ -108,8 +113,12 @@ def test_selenium_wrapper():
 
 
 def test_proxy_api():
-    service = ProxyService(PROXY_API_KEY, PROXY_KEY, PROXY_ID)
-    print(service.prepare_proxy(MEGAFON_OPERATOR, RYAZAN_CITY_ID))
+    api = MobileproxyApi(PROXY_API_KEY)
+    # print(api.get_geo_operator_proxy())
+    print(api.get_available_geo(PROXY_ID, MEGAFON_OPERATOR, 1))
+    # print(api.change_geo(PROXY_ID, 62, 8604, '3 (DK)'))
+    # service = ProxyService(PROXY_API_KEY, PROXY_KEY, PROXY_ID)
+    # print(service.prepare_proxy(MEGAFON_OPERATOR, RYAZAN_CITY_ID))
 
 
 def test_service():
@@ -120,11 +129,11 @@ def test_service():
     webdriver_options.proxy_config_ext_path = PROXY_AUTH_EXT_PATH
     webdriver_options.proxy = {
         "connection_type": "HTTP proxy",
-        "proxy_url": "wproxy.site:13878",
-        "proxy_username": "YdsYN6",
-        "proxy_password": "Et7uscuPyg2M"
+        "proxy_url": f"{PROXY_HOST}:{PROXY_PORT}",
+        "proxy_username": PROXY_USER,
+        "proxy_password": PROXY_PASSWORD
     }
-    proxy_options = ProxyOptions(PROXY_API_KEY, PROXY_KEY, PROXY_ID, MEGAFON_OPERATOR, RYAZAN_CITY_ID)
+    proxy_options = ProxyOptions(PROXY_API_KEY, PROXY_KEY, PROXY_ID, [MEGAFON_OPERATOR], MOSCOW_CITY_ID)
     service = IncognitonWebdriverService(PROFILE_ID, webdriver_options, proxy_options)
     webdriver_wrapper = service.start_session()  # Do any selenium staff via webdriver_wrapper
     webdriver_wrapper.get('https://avito.ru')
@@ -133,7 +142,7 @@ def test_service():
 
 def main():
     test_service()
-    # make_proxy_config("wproxy.site", 13878, "YdsYN6", "Et7uscuPyg2M")
+    # make_proxy_config(PROXY_HOST, PROXY_PORT, PROXY_USER, PROXY_PASSWORD)
 
 
 if __name__ == '__main__':

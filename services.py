@@ -6,22 +6,27 @@ class ProxyOptions:
     api_key: str
     proxy_key: str
     proxy_id: int
-    operator: str = ''
-    city_id: int = 0
+    operators: list[str]
+    city_id: int
 
-    def __init__(self, api_key: str, proxy_key: str, proxy_id: int, operator: str, city_id: int) -> None:
+    def __init__(
+            self, api_key: str,
+            proxy_key: str,
+            proxy_id: int,
+            operators: list[str],
+            city_id: int = MobileproxyApi.CITY_ID_MOSCOW) -> None:
         """
         :param api_key:
         :param proxy_key:
         :param proxy_id:
-        :param operator: operator to be set if proxy speed is too low
+        :param operators: operators to be set if proxy speed is too low
         :param city_id: city to be set if proxy speed is too low
         """
 
         self.api_key = api_key
         self.proxy_key = proxy_key
         self.proxy_id = proxy_id
-        self.operator = operator
+        self.operators = operators
         self.city_id = city_id
 
 
@@ -78,7 +83,7 @@ class IncognitonWebdriverService:
                 IncognitonApi.PROFILE_GROUP_IN_WORK not in profile_group)
 
     def __prepare_proxy(self) -> None:
-        if not self.__proxy_service.prepare_proxy(self.__proxy_options.operator, self.__proxy_options.city_id):
+        if not self.__proxy_service.prepare_proxy(self.__proxy_options.operators, self.__proxy_options.city_id):
             raise Exception("Cannot prepare proxy for session")
 
     def __backup_profile_data(self) -> None:
