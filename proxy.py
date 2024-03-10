@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import random
 from typing import Callable
 import time
 import requests
@@ -86,7 +85,6 @@ class MobileproxyApi:
         geo_list = self.get_geo_list(proxy_id, operator)
         available_geo = []
         for geo in geo_list:
-            print(geo)
             if int(geo['id_city']) == city_id and int(geo['count_free']) > 0:
                 available_geo.append(geo)
         return available_geo
@@ -111,7 +109,7 @@ class MobileproxyApi:
 class ProxySaleApi:
     __BASE_URL = 'https://free.proxy-sale.com/api/client'
 
-    def proxy_speedtest(self, proxy_info: str, proxy_type: str = "HTTP", timeout: int = 5) -> int | None:
+    def proxy_speedtest(self, proxy_info: str, proxy_type: str = "HTTP", timeout: int = 15) -> int | None:
         """
         :param proxy_info: proxy info in format: "IP:PORT:USERNAME:PASSWORD"
         :param proxy_type: type of proxy: HTTP/HTTPS/SOCKS
@@ -125,15 +123,17 @@ class ProxySaleApi:
             "proxyIp": proxy_info,
             "proxyType": proxy_type,
             "timeout": str(timeout),
-            "url": "https://www.google.ru"
+            "url": "https://www.avito.ru"
         }
 
         def get_average_speed():
             response = requests.post(url, data=json.dumps(data), headers={'Content-Type': 'application/json'})
             response_data = response.json()
+            # print(response_data)
+            # print(data)
             if response_data.get('averageSpeed') is None:
                 raise ProxyApiException(f"Invalid Proxy speedtest response: {response}")
-            return int(response_data['averageSpeed'])
+            return int(response_data['averageSpeed']) // 1000
 
         return _call_safe(get_average_speed, timeout=5)
 
@@ -158,7 +158,11 @@ class ProxyService:
         speed = self.__proxy_speedtest_api.proxy_speedtest(proxy_speedtest_info)
 
         if speed is None or speed < min_proxy_speed:
-            self.change_geo(operators, city_id)
+            print('Speed too low')
+            if self.change_geo(operators, city_id):
+                print('Proxy geo changed')
+            else:
+                print('Cannot change geo because of 10 minutes timeout')
 
         return self.change_proxy()
 
@@ -210,10 +214,11 @@ class ProxyApiException(Exception):
 
 def _call_safe(callback: Callable, attempts: int = 3, timeout: int = 2):
     """ Executes func with many attempts """
+    err = None
     for _ in range(attempts):
         try:
             return callback()
         except Exception as e:
-            print(str(e))
+            err = e
             time.sleep(timeout)
-    raise Exception("Execution failed")
+    raise err

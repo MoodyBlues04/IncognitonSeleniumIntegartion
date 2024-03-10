@@ -84,8 +84,6 @@ def make_proxy_config(proxy_host: str, proxy_port: int, proxy_user: str, proxy_p
 def test_selenium_wrapper():
     api = IncognitonApi()
     cookies = api.get_cookie(PROFILE_ID)
-    for cookie in cookies:
-        print(cookie)
 
     options = IncognitonWebdriverOptions()
     """
@@ -141,6 +139,10 @@ def test_service():
 
 
 def main():
+    # api = MobileproxyApi(PROXY_API_KEY)
+    # print(api.get_proxy_info(PROXY_ID))
+    # from proxy import ProxySaleApi
+    # print(ProxySaleApi().proxy_speedtest(f"94.25.168.50:13878:{PROXY_USER}:{PROXY_PASSWORD}"))
     test_service()
     # make_proxy_config(PROXY_HOST, PROXY_PORT, PROXY_USER, PROXY_PASSWORD)
 

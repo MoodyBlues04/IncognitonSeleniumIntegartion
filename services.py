@@ -53,12 +53,19 @@ class IncognitonWebdriverService:
 
     def start_session(self) -> IncognitonWebdriverWrapper:
         self.__check_profile_status()
+        print('Profile status: ready')
         self.__prepare_proxy()
+        print('Proxy prepared')
 
         self.__backup_profile_data()
+        print('Profile data saved')
 
         wrapper = IncognitonWebdriverWrapper(self.__profile_id, self.__webdriver_options)
+        print('Webdriver configured')
+
         self.__set_profile_in_work_status()
+        print('Status "in work" set for profile')
+
         return wrapper
 
     def end_session(self, webdriver_wrapper: IncognitonWebdriverWrapper) -> None:
@@ -70,6 +77,7 @@ class IncognitonWebdriverService:
             self.__profile_data_backup['general_profile_information'],
             self.__profile_data_backup['Proxy']
         )
+        print('Profile data set back')
 
     def __check_profile_status(self) -> None:
         if not self.__is_profile_ready_to_work():

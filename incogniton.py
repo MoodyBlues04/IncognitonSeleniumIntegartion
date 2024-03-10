@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import time
-from typing import Callable
 import json
 import requests
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from urllib.parse import urlparse
+from proxy import _call_safe
 
 
 class IncognitonWebdriverOptions:
@@ -32,7 +31,7 @@ class IncognitonWebdriverWrapper:
             self.__profile_id = profile_id
             self.__driver = self.__make_driver(options)
             self.__set_cookies()
-        self.__exec_safe(callback, trials)
+        _call_safe(callback, trials)
 
     def __del__(self, trials: int = 3):
         def callback():
@@ -43,7 +42,7 @@ class IncognitonWebdriverWrapper:
                     cookie.pop('expiry')
                 cookies[idx] = cookie
             self.__api.add_cookie(self.__profile_id, cookies)
-        self.__exec_safe(callback, trials)
+        _call_safe(callback, trials)
 
     @property
     def driver(self):
@@ -56,7 +55,7 @@ class IncognitonWebdriverWrapper:
             self.__driver.delete_all_cookies()
             self.update_cookies(url, attempts=1)
             self.__driver.refresh()
-        self.__exec_safe(callback, attempts)
+        _call_safe(callback, attempts)
 
     def update_cookies(self, url: str, attempts: int = 3) -> None:
         """ Sets webdriver cookies for url's domain """
@@ -65,17 +64,7 @@ class IncognitonWebdriverWrapper:
             for cookie in self.__cookies:
                 if domain in cookie.get('domain'):
                     self.__driver.add_cookie(cookie)
-        self.__exec_safe(callback, attempts)
-
-    def __exec_safe(self, callback: Callable, attempts: int = 3, timeout: int = 2) -> None:
-        """ Executes func with many attempts """
-        for _ in range(attempts):
-            try:
-                callback()
-                return
-            except IncognitonApiException as e:
-                print(str(e))
-                time.sleep(timeout)
+        _call_safe(callback, attempts)
 
     def __set_cookies(self) -> None:
         cookie_data = self.__api.get_cookie(self.__profile_id)
@@ -121,44 +110,53 @@ class IncognitonApi:
     PROFILE_GROUP_IN_WORK = 'В работе'
 
     def all_profiles(self) -> dict:
-        return self.__get(f"/profile/all")
+        def _all():
+            return self.__get(f"/profile/all")
+        return _call_safe(_all)
 
     def get_profile(self, profile_id: str) -> dict:
-        response = self.__get(f"/profile/get/{profile_id}")
-        return self.__get_data_or_fail(response, 'profileData')
+        def _get_profile():
+            response = self.__get(f"/profile/get/{profile_id}")
+            return self.__get_data_or_fail(response, 'profileData')
+        return _call_safe(_get_profile)
 
     def is_profile_ready(self, profile_id: str) -> bool:
         return self.get_profile_status(profile_id) == self.PROFILE_STATUS_READY
 
     def get_profile_status(self, profile_id: str) -> str:
-        response = self.__get(f"/profile/status/{profile_id}")
-        return self.__get_data_or_fail(response, 'status')
+        def _get_profile_status():
+            response = self.__get(f"/profile/status/{profile_id}")
+            return self.__get_data_or_fail(response, 'status')
+        return _call_safe(_get_profile_status)
 
     def get_cookie(self, profile_id: str) -> dict:
-        response = self.__get(f"/profile/cookie/{profile_id}")
-        return self.__get_data_or_fail(response, 'CookieData ')
+        def _get_cookie():
+            response = self.__get(f"/profile/cookie/{profile_id}")
+            return self.__get_data_or_fail(response, 'CookieData ')
+        return _call_safe(_get_cookie)
 
     def add_cookie(self, profile_id: str, cookies: list) -> dict:
-        return self.__post('/profile/addCookie', {
-            'data': json.dumps({
-                'profile_browser_id': profile_id,
-                'format': 'json',
-                'cookie': json.dumps(cookies)
+        def _add_cookie():
+            return self.__post('/profile/addCookie', {
+                'data': json.dumps({
+                    'profile_browser_id': profile_id,
+                    'format': 'json',
+                    'cookie': json.dumps(cookies)
+                })
             })
-        })
+        return _call_safe(_add_cookie)
 
     def update_profile(self, profile_id: str, profile_info: dict = dict(), proxy_info: dict = dict()) -> dict:
-        request = {
-            "profileData": json.dumps({
-                "profile_browser_id": profile_id,
-                "Proxy": proxy_info,
-                "general_profile_information": profile_info
-            })
-        }
-        response = self.__post("/profile/update", request)
-        # response = {"data": "no request sent"}
-        print(request, response, sep="\n")
-        return response
+        def _update_profile():
+            request = {
+                "profileData": json.dumps({
+                    "profile_browser_id": profile_id,
+                    "Proxy": proxy_info,
+                    "general_profile_information": profile_info
+                })
+            }
+            return self.__post("/profile/update", request)
+        return _call_safe(_update_profile)
 
     def __get_data_or_fail(self, response: dict, key: str):
         self.__validate_response(response, key)
