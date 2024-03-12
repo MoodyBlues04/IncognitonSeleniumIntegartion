@@ -1,7 +1,7 @@
 import zipfile
 
 from incogniton import IncognitonWebdriverWrapper, IncognitonApi, IncognitonWebdriverOptions
-from proxy import MobileproxyApi, ProxyService, ProxySaleApi
+from proxy import MobileproxyApi, ProxyService, SpeedtestService
 
 
 PROFILE_ID = '12377ce4-c110-4cb3-be5f-f20e4d59484d'
@@ -139,10 +139,12 @@ def test_service():
 
 
 def main():
+    # proxy_url = f"{proxy_host}:{proxy_port}:{PROXY_USER}:{PROXY_PASSWORD}"
+
     # api = MobileproxyApi(PROXY_API_KEY)
     # print(api.get_proxy_info(PROXY_ID))
     # from proxy import ProxySaleApi
-    # print(ProxySaleApi().proxy_speedtest(f"94.25.168.50:13878:{PROXY_USER}:{PROXY_PASSWORD}"))
+    # print(ProxySaleApi().proxy_speedtest(proxy_url))
     test_service()
     # make_proxy_config(PROXY_HOST, PROXY_PORT, PROXY_USER, PROXY_PASSWORD)
 

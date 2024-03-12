@@ -91,7 +91,13 @@ class IncognitonWebdriverService:
                 IncognitonApi.PROFILE_GROUP_IN_WORK not in profile_group)
 
     def __prepare_proxy(self) -> None:
-        if not self.__proxy_service.prepare_proxy(self.__proxy_options.operators, self.__proxy_options.city_id):
+        is_prepared = self.__proxy_service.prepare_proxy(
+            self.__webdriver_options.proxy['proxy_username'],
+            self.__webdriver_options.proxy['proxy_password'],
+            self.__proxy_options.operators,
+            self.__proxy_options.city_id
+        )
+        if not is_prepared:
             raise Exception("Cannot prepare proxy for session")
 
     def __backup_profile_data(self) -> None:

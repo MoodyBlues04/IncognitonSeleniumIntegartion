@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-import json
 from typing import Callable
 import time
 import requests
+from speedtest import Speedtest
+import socks
+import socket
 
 
 class MobileproxyApi:
@@ -106,36 +108,20 @@ class MobileproxyApi:
         return response_data
 
 
-class ProxySaleApi:
-    __BASE_URL = 'https://free.proxy-sale.com/api/client'
-
-    def proxy_speedtest(self, proxy_info: str, proxy_type: str = "HTTP", timeout: int = 15) -> int | None:
+class SpeedtestService:
+    def proxy_speedtest(self, proxy_host: str, proxy_port: int, proxy_user: str, proxy_password: str) -> float:
         """
-        :param proxy_info: proxy info in format: "IP:PORT:USERNAME:PASSWORD"
-        :param proxy_type: type of proxy: HTTP/HTTPS/SOCKS
-        :param timeout: timeout of speedtest
-        :return: speed in kb/s (kilobytes per second)
+        :return: proxy download speed in Mb/s
         """
 
-        url = f'{self.__BASE_URL}/speedtest'
-        data = {
-            "access": "true",
-            "proxyIp": proxy_info,
-            "proxyType": proxy_type,
-            "timeout": str(timeout),
-            "url": "https://www.avito.ru"
-        }
-
-        def get_average_speed():
-            response = requests.post(url, data=json.dumps(data), headers={'Content-Type': 'application/json'})
-            response_data = response.json()
-            # print(response_data)
-            # print(data)
-            if response_data.get('averageSpeed') is None:
-                raise ProxyApiException(f"Invalid Proxy speedtest response: {response}")
-            return int(response_data['averageSpeed']) // 1000
-
-        return _call_safe(get_average_speed, timeout=5)
+        socks.set_default_proxy(socks.HTTP, proxy_host, proxy_port, True, proxy_user, proxy_password)
+        _socket = socket.socket
+        socket.socket = socks.socksocket
+        st = Speedtest()
+        proxy_speed = st.download() / 1024 / 1024
+        socket.socket = _socket
+        print(f"Proxy speed: {proxy_speed}")
+        return proxy_speed
 
 
 class ProxyService:
@@ -144,18 +130,17 @@ class ProxyService:
         self.__proxy_key = proxy_key
         self.__proxy_id = proxy_id
         self.__proxy_api = MobileproxyApi(api_key)
-        self.__proxy_speedtest_api = ProxySaleApi()
+        self.__proxy_speedtest_service = SpeedtestService()
 
-    def prepare_proxy(self, operators: list[str], city_id: int = MobileproxyApi.CITY_ID_MOSCOW, min_proxy_speed: int = 10_000) -> bool:
+    def prepare_proxy(self, proxy_user: str, proxy_password: str, operators: list[str], city_id: int = MobileproxyApi.CITY_ID_MOSCOW, min_proxy_speed: float = 1.0) -> bool:
         """
         Checks the speed of the internet connection and changes proxy if it's too slow
-        :param min_proxy_speed: minimal speed of proxy to be used, in KB/S.
+        :param min_proxy_speed: minimal speed of proxy to be used, in Mb/s.
         :param operators: list of operators for change_geo
         :param city_id: city for change_geo
         """
 
-        proxy_speedtest_info = self.__get_proxy_speedtest_info()
-        speed = self.__proxy_speedtest_api.proxy_speedtest(proxy_speedtest_info)
+        speed = self.__proxy_speedtest(proxy_user, proxy_password)
 
         if speed is None or speed < min_proxy_speed:
             print('Speed too low')
@@ -201,10 +186,14 @@ class ProxyService:
 
         return bool(_call_safe(_change_proxy))
 
-    def __get_proxy_speedtest_info(self) -> str:
+    def __proxy_speedtest(self, proxy_user: str, proxy_password: str) -> float:
         proxy_info = self.__proxy_api.get_proxy_info(self.__proxy_id)
-        return (f"{proxy_info['proxy_independent_http_host_ip']}:{proxy_info['proxy_independent_port']}"
-                f":{proxy_info['proxy_login']}:{proxy_info['proxy_pass']}")
+        return self.__proxy_speedtest_service.proxy_speedtest(
+            proxy_info['proxy_independent_http_host_ip'],
+            int(proxy_info['proxy_independent_port']),
+            proxy_user,
+            proxy_password
+        )
 
 
 class ProxyApiException(Exception):
@@ -220,5 +209,6 @@ def _call_safe(callback: Callable, attempts: int = 3, timeout: int = 2):
             return callback()
         except Exception as e:
             err = e
+            print(str(e))
             time.sleep(timeout)
     raise err
