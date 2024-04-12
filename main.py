@@ -4,18 +4,18 @@ from incogniton import IncognitonWebdriverWrapper, IncognitonApi, IncognitonWebd
 from proxy import MobileproxyApi, ProxyService, SpeedtestService
 
 
-PROFILE_ID = '12377ce4-c110-4cb3-be5f-f20e4d59484d'
+PROFILE_ID = '5cd1a580-ce1b-4137-a093-69d9c5d218ca'
 ADBLOCK_PATH = 'C:\\Users\\ant\AppData\Local\Google\Chrome\\User Data\Default\Extensions\gighmmpiobklfepjocnamgkkbiglidom\\5.19.0_0\ext.crx'
 """ See: https://www.crx4chrome.com/crx/31927/ """
 PROXY_AUTH_EXT_PATH = 'proxy_auth_plugin.zip'
 
 PROXY_HOST = 'yproxy.site'
-PROXY_PORT = 13878
-PROXY_USER = 'YdsYN6'
-PROXY_PASSWORD = 'Et7uscuPyg2M'
-PROXY_ID = 231297
-PROXY_API_KEY = '295f08e7d39ff2be0fc928dc84ee1e4a'
-PROXY_KEY = 'f6e5b670837a85bc9644719b07e686ff'
+PROXY_PORT = 10399
+PROXY_USER = 'mdeM5N'
+PROXY_PASSWORD = 'y7Q3qxapaEnH'
+PROXY_ID = 219753
+PROXY_API_KEY = '75228658ce97a2cd8b637c34700a91c5'
+PROXY_KEY = '7a80922ee4a327c53e0be74784d20ffe'
 RYAZAN_CITY_ID = 1736
 MOSCOW_CITY_ID = 1
 MEGAFON_OPERATOR = 'megafone'
@@ -135,10 +135,18 @@ def test_service():
     service = IncognitonWebdriverService(PROFILE_ID, webdriver_options, proxy_options)
     webdriver_wrapper = service.start_session()  # Do any selenium staff via webdriver_wrapper
     webdriver_wrapper.get('https://avito.ru')
-    service.end_session(webdriver_wrapper)
+    try:
+        from selenium.webdriver.common.by import By
+        print('test')
+        el = webdriver_wrapper.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/div/div/ul/li[1]/a')
+        print(el.text)
+    finally:
+        service.end_session(webdriver_wrapper)
 
 
 def main():
+    make_proxy_config(PROXY_HOST, PROXY_PORT, PROXY_USER, PROXY_PASSWORD)
+
     # proxy_url = f"{proxy_host}:{proxy_port}:{PROXY_USER}:{PROXY_PASSWORD}"
 
     # api = MobileproxyApi(PROXY_API_KEY)

@@ -6,6 +6,8 @@ import requests
 from speedtest import Speedtest
 import socks
 import socket
+import traceback
+from random import randint
 
 
 class MobileproxyApi:
@@ -117,7 +119,7 @@ class SpeedtestService:
         socks.set_default_proxy(socks.HTTP, proxy_host, proxy_port, True, proxy_user, proxy_password)
         _socket = socket.socket
         socket.socket = socks.socksocket
-        st = Speedtest()
+        st = Speedtest(secure=True)
         proxy_speed = st.download() / 1024 / 1024
         socket.socket = _socket
         print(f"Proxy speed: {proxy_speed}")
@@ -159,7 +161,8 @@ class ProxyService:
             if len(available_geos) == 0:
                 continue
 
-            available_geo = available_geos[0]['geoid']
+            geo_index = randint(0, len(available_geos)-1)
+            available_geo = available_geos[geo_index]['geoid']
             return self.__proxy_api.change_geo(
                 self.__proxy_id,
                 MobileproxyApi.COUNTRY_ID_RU,
@@ -209,6 +212,7 @@ def _call_safe(callback: Callable, attempts: int = 3, timeout: int = 2):
             return callback()
         except Exception as e:
             err = e
-            print(str(e))
+            print('Error:', str(e))
+            print('Traceback:', traceback.format_exception(e))
             time.sleep(timeout)
     raise err

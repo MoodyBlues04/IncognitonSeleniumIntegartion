@@ -25,15 +25,15 @@ class IncognitonWebdriverWrapper:
     __profile_id: str
     __cookies: list[dict] = []
 
-    def __init__(self, profile_id: str, options: IncognitonWebdriverOptions, trials: int = 3) -> None:
+    def __init__(self, profile_id: str, options: IncognitonWebdriverOptions, attempts: int = 3) -> None:
         def callback():
             self.__api = IncognitonApi()
             self.__profile_id = profile_id
             self.__driver = self.__make_driver(options)
             self.__set_cookies()
-        _call_safe(callback, trials)
+        _call_safe(callback, attempts)
 
-    def __del__(self, trials: int = 3):
+    def end_session(self, attempts: int = 3):
         def callback():
             cookies = self.__driver.get_cookies()
             for idx, cookie in enumerate(cookies):
@@ -42,7 +42,7 @@ class IncognitonWebdriverWrapper:
                     cookie.pop('expiry')
                 cookies[idx] = cookie
             self.__api.add_cookie(self.__profile_id, cookies)
-        _call_safe(callback, trials)
+        _call_safe(callback, attempts)
 
     @property
     def driver(self):
@@ -82,13 +82,14 @@ class IncognitonWebdriverWrapper:
         # chrome_options.add_argument("--headless")
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument("--profile-directory=selenium")
+        chrome_options.page_load_strategy = 'eager'
 
         if options.proxy_config_ext_path is not None:
             chrome_options.add_extension(options.proxy_config_ext_path)
         if options.proxy.get('proxy_url'):
             chrome_options.add_argument(f'--proxy-server={options.proxy["proxy_url"]}')
-        if options.adblock_extension_path is not None:
-            chrome_options.add_extension(options.adblock_extension_path)
+        # if options.adblock_extension_path is not None:
+        #     chrome_options.add_extension(options.adblock_extension_path)
 
         profile_data = self.__api.get_profile(self.__profile_id)
         user_agent = profile_data['Navigator'].get('user_agent')
