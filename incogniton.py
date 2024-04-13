@@ -26,12 +26,10 @@ class IncognitonWebdriverWrapper:
     __cookies: list[dict] = []
 
     def __init__(self, profile_id: str, options: IncognitonWebdriverOptions, attempts: int = 3) -> None:
-        def callback():
-            self.__api = IncognitonApi()
-            self.__profile_id = profile_id
-            self.__driver = self.__make_driver(options)
-            self.__set_cookies()
-        _call_safe(callback, attempts)
+        self.__api = IncognitonApi()
+        self.__profile_id = profile_id
+        self.__driver = self.__make_driver(options)
+        self.__set_cookies()
 
     def end_session(self, attempts: int = 3):
         def callback():

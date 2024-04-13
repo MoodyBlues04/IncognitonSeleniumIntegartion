@@ -80,7 +80,13 @@ class IncognitonWebdriverService:
         )
 
         webdriver_wrapper.end_session()
-        webdriver_wrapper.driver.quit()
+
+        try:
+            time.sleep(2)
+            webdriver_wrapper.driver.close()
+            webdriver_wrapper.driver.quit()
+        except Exception:
+            pass
 
         print('Profile data set back')
 
