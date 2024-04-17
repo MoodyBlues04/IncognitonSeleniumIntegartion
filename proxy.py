@@ -142,7 +142,9 @@ class ProxyService:
         :param city_id: city for change_geo
         """
 
-        speed = self.__proxy_speedtest(proxy_user, proxy_password)
+        def speedtest():
+            return self.__proxy_speedtest(proxy_user, proxy_password)
+        speed = _call_safe(speedtest)
 
         if speed is None or speed < min_proxy_speed:
             print('Speed too low')
